@@ -61,7 +61,7 @@ export default function IntakePage({ params }) {
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="max-w-xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <p className="text-blue-400 text-sm mb-1">Practice Founder</p>
+          <p className="text-blue-400 text-sm mb-1">meddesk</p>
           <h1 className="text-2xl font-semibold">{form.name}</h1>
           <p className="text-gray-400 text-sm mt-1 capitalize">{form.form_type?.replace('_', ' ')}</p>
         </div>
@@ -108,7 +108,7 @@ export default function IntakePage({ params }) {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-600 mt-6">Powered by Practice Founder</p>
+        <p className="text-center text-xs text-gray-600 mt-6">Powered by meddesk</p>
       </div>
     </div>
   )

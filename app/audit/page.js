@@ -45,7 +45,7 @@ export default function AuditLogPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Practice Founder</h1>
+        <h1 className="text-lg font-semibold">meddesk</h1>
         <button onClick={() => { supabase.auth.signOut(); router.push('/login') }} className="text-sm text-gray-400 hover:text-white">Sign out</button>
       </div>
 
