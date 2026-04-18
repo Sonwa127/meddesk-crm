@@ -65,6 +65,18 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+        <div className="mt-4 pt-4 border-t border-gray-800">
+  <button
+    type="button"
+    onClick={() => {
+      setEmail('demo@meddesk.io')
+      setPassword('MedDesk2024!')
+    }}
+    className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm py-2.5 rounded-lg transition"
+  >
+    Try Demo — auto-fill credentials
+  </button>
+</div>
       </div>
     </div>
   )
