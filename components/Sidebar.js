@@ -32,7 +32,7 @@ export default function Sidebar({ active }) {
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition">
           <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">P</div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-white truncate">meddesk</p>
+            <p className="text-xs font-medium text-white truncate">MedDesk</p>
             <p className="text-xs text-gray-500 truncate">Demo Practice</p>
           </div>
           <span className="text-gray-500 text-xs">⌄</span>
