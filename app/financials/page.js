@@ -59,6 +59,19 @@ export default function FinancialsPage() {
     setEntries(entries.filter(e => e.id !== id))
   }
 
+  function exportCSV() {
+    const headers = ['Date', 'Type', 'Description', 'Amount']
+    const rows = entries.map(e => [e.entry_date, e.entry_type, e.description || '', e.amount])
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'financials.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const typeColor = {
     revenue: 'text-green-400',
     collection: 'text-blue-400',
@@ -74,7 +87,7 @@ export default function FinancialsPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">meddesk</h1>
+        <h1 className="text-lg font-semibold">MedDesk</h1>
         <button onClick={() => { supabase.auth.signOut(); router.push('/login') }} className="text-sm text-gray-400 hover:text-white">Sign out</button>
       </div>
 
@@ -87,10 +100,16 @@ export default function FinancialsPage() {
               <h2 className="text-xl font-semibold">Financials</h2>
               <p className="text-gray-400 text-sm">{entries.length} entries</p>
             </div>
-            <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ entry_type: 'revenue', amount: '', description: '', entry_date: new Date().toISOString().split('T')[0] }) }}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition">
-              + Add Entry
-            </button>
+            <div className="flex gap-2">
+              <button onClick={exportCSV}
+                className="border border-gray-700 hover:border-gray-500 text-gray-300 text-sm px-4 py-2 rounded-lg transition">
+                Export CSV
+              </button>
+              <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ entry_type: 'revenue', amount: '', description: '', entry_date: new Date().toISOString().split('T')[0] }) }}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition">
+                + Add Entry
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mb-6">

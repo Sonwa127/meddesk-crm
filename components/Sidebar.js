@@ -13,6 +13,7 @@ export default function Sidebar({ active }) {
     { label: 'Financials', href: '/financials', icon: '💰' },
     { label: 'Tasks', href: '/tasks', icon: '✓' },
     { label: 'Audit Log', href: '/audit', icon: '🔒' },
+    { label: 'Settings', href: '/settings', icon: '⚙️' },
   ]
 
   const formsLinks = [
@@ -27,10 +28,9 @@ export default function Sidebar({ active }) {
   return (
     <aside className="w-56 border-r border-gray-800 min-h-screen flex flex-col flex-shrink-0 bg-gray-950">
 
-      {/* Org selector */}
       <div className="px-4 py-3 border-b border-gray-800">
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition">
-          <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">P</div>
+          <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">M</div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-white truncate">MedDesk</p>
             <p className="text-xs text-gray-500 truncate">Demo Practice</p>
@@ -39,10 +39,8 @@ export default function Sidebar({ active }) {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
 
-        {/* Workspace */}
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">Workspace</p>
           <div className="space-y-0.5">
@@ -59,7 +57,6 @@ export default function Sidebar({ active }) {
           </div>
         </div>
 
-        {/* Forms */}
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">Forms</p>
           <div className="space-y-0.5">
@@ -76,7 +73,6 @@ export default function Sidebar({ active }) {
           </div>
         </div>
 
-        {/* Analytics */}
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">Analytics</p>
           <div className="space-y-0.5">
@@ -95,7 +91,6 @@ export default function Sidebar({ active }) {
 
       </nav>
 
-      {/* Bottom — HIPAA badge */}
       <div className="px-4 py-3 border-t border-gray-800">
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-green-950 border border-green-900">
           <span className="text-green-400 text-xs">🔒</span>

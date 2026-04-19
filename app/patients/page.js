@@ -63,7 +63,7 @@ export default function PatientsPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">meddesk</h1>
+        <h1 className="text-lg font-semibold">MedDesk</h1>
         <button onClick={() => { supabase.auth.signOut(); router.push('/login') }} className="text-sm text-gray-400 hover:text-white">Sign out</button>
       </div>
 
@@ -137,7 +137,12 @@ export default function PatientsPage() {
                   <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">No patients yet. Add your first one.</td></tr>
                 ) : patients.map(p => (
                   <tr key={p.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                    <td className="px-4 py-3 font-medium">{p.full_name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <span onClick={() => router.push(`/patients/${p.id}`)}
+                        className="hover:text-blue-400 cursor-pointer transition">
+                        {p.full_name}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-gray-400">{p.dob || '—'}</td>
                     <td className="px-4 py-3 text-gray-400">{p.email || '—'}</td>
                     <td className="px-4 py-3 text-gray-400">{p.phone || '—'}</td>
