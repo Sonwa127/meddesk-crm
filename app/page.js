@@ -109,7 +109,7 @@ export default function LandingPage() {
           <span className="mx-2">·</span>
           Built by{' '}
           <a
-            href="https://www.linkedin.com/in/ann-chisom-sokwueaku"
+            href="https://www.linkedin.com/in/ann-chisom-s-172027244"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300 transition"
