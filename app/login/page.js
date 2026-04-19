@@ -70,7 +70,7 @@ export default function LoginPage() {
     type="button"
     onClick={() => {
       setEmail('demo@meddesk.io')
-      setPassword('MedDesk2024!')
+      setPassword('MedDesk2026!')
     }}
     className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm py-2.5 rounded-lg transition"
   >
