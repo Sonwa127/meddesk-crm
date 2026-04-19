@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../utils/supabase'
 import { useRouter } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from 'recharts'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [patientData, setPatientData] = useState([])
   const [insight, setInsight] = useState(null)
   const [loadingInsight, setLoadingInsight] = useState(false)
+  const [chartType, setChartType] = useState('area')
   const router = useRouter()
   const supabase = createClient()
 
@@ -58,7 +59,6 @@ export default function Dashboard() {
     setLoadingInsight(true)
     const { data: financials } = await supabase.from('financials').select('*').limit(10)
     const { data: patients } = await supabase.from('patients').select('*').limit(10)
-
     const res = await fetch('/api/insights', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,9 +73,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold">MedDesk</h1>
-        <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-white transition">
-          Sign out
-        </button>
+        <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-white transition">Sign out</button>
       </div>
 
       <div className="flex">
@@ -122,40 +120,104 @@ export default function Dashboard() {
 
           {/* Charts */}
           <div className="grid grid-cols-2 gap-6 mb-8">
+            {/* Revenue Chart */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">Revenue Over Time</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-gray-300">Revenue Over Time</h3>
+                <div className="flex gap-1">
+                  {['area', 'bar', 'line'].map(type => (
+                    <button key={type} onClick={() => setChartType(type)}
+                      className={`text-xs px-2 py-1 rounded capitalize transition ${chartType === type ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {revenueData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={200}>
-                  <AreaChart data={revenueData}>
-                    <defs>
-                      <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                    <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                    <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
-                    <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="url(#revenueGrad)" strokeWidth={2} />
-                  </AreaChart>
+                  {chartType === 'area' ? (
+                    <AreaChart data={revenueData}>
+                      <defs>
+                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                      <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
+                      <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="url(#revenueGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  ) : chartType === 'bar' ? (
+                    <BarChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                      <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
+                      <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  ) : (
+                    <LineChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                      <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
+                      <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
+                    </LineChart>
+                  )}
                 </ResponsiveContainer>
               ) : (
                 <div className="h-48 flex items-center justify-center text-gray-600 text-sm">No revenue data yet</div>
               )}
             </div>
 
+            {/* Patient Growth Chart */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">Patient Growth</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-gray-300">Patient Growth</h3>
+                <div className="flex gap-1">
+                  {['bar', 'area', 'line'].map(type => (
+                    <button key={type} onClick={() => setChartType(type)}
+                      className={`text-xs px-2 py-1 rounded capitalize transition ${chartType === type ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {patientData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={patientData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                    <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                    <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
-                    <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
+                  {chartType === 'bar' ? (
+                    <BarChart data={patientData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                      <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
+                      <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  ) : chartType === 'area' ? (
+                    <AreaChart data={patientData}>
+                      <defs>
+                        <linearGradient id="patientGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                      <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
+                      <Area type="monotone" dataKey="count" stroke="#8b5cf6" fill="url(#patientGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  ) : (
+                    <LineChart data={patientData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                      <XAxis dataKey="month" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
+                      <Line type="monotone" dataKey="count" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6' }} />
+                    </LineChart>
+                  )}
                 </ResponsiveContainer>
               ) : (
                 <div className="h-48 flex items-center justify-center text-gray-600 text-sm">No patient data yet</div>
