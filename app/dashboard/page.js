@@ -11,6 +11,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ patients: 0, tasks: 0, revenue: 0 })
   const [revenueData, setRevenueData] = useState([])
   const [patientData, setPatientData] = useState([])
+  const [insight, setInsight] = useState(null)
+  const [loadingInsight, setLoadingInsight] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -30,7 +32,6 @@ export default function Dashboard() {
       const revenue = financials?.filter(f => f.entry_type === 'revenue').reduce((sum, r) => sum + Number(r.amount), 0) || 0
       setStats({ patients: patients || 0, tasks: tasks || 0, revenue })
 
-      // Build revenue chart data by month
       const revenueByMonth = {}
       financials?.filter(f => f.entry_type === 'revenue').forEach(f => {
         const month = new Date(f.entry_date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
@@ -38,7 +39,6 @@ export default function Dashboard() {
       })
       setRevenueData(Object.entries(revenueByMonth).map(([month, revenue]) => ({ month, revenue })))
 
-      // Build patient growth data by month
       const patientsByMonth = {}
       patientRecords?.forEach(p => {
         const month = new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
@@ -52,6 +52,21 @@ export default function Dashboard() {
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  async function generateInsight() {
+    setLoadingInsight(true)
+    const { data: financials } = await supabase.from('financials').select('*').limit(10)
+    const { data: patients } = await supabase.from('patients').select('*').limit(10)
+
+    const res = await fetch('/api/insights', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stats, financials, patients })
+    })
+    const data = await res.json()
+    setInsight(data.insight)
+    setLoadingInsight(false)
   }
 
   return (
@@ -86,9 +101,27 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* AI Insights */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-medium text-gray-300">AI Practice Insights</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Powered by GPT-4o mini</p>
+              </div>
+              <button onClick={generateInsight} disabled={loadingInsight}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-lg transition">
+                {loadingInsight ? 'Analyzing...' : '✨ Generate Insight'}
+              </button>
+            </div>
+            {insight ? (
+              <p className="text-gray-300 text-sm leading-relaxed">{insight}</p>
+            ) : (
+              <p className="text-gray-600 text-sm">Click "Generate Insight" to get an AI-powered summary of this practice's performance.</p>
+            )}
+          </div>
+
           {/* Charts */}
           <div className="grid grid-cols-2 gap-6 mb-8">
-            {/* Revenue Chart */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h3 className="text-sm font-medium text-gray-300 mb-4">Revenue Over Time</h3>
               {revenueData.length > 0 ? (
@@ -112,7 +145,6 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Patient Growth Chart */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h3 className="text-sm font-medium text-gray-300 mb-4">Patient Growth</h3>
               {patientData.length > 0 ? (
