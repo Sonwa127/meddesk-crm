@@ -46,6 +46,7 @@ export default function FormsPage() {
   const [formType, setFormType] = useState('client_onboarding')
   const [fields, setFields] = useState([])
   const [saving, setSaving] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -146,16 +147,34 @@ export default function FormsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">meddesk</h1>
+
+      {/* Top nav */}
+      <div className="border-b border-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="sm:hidden text-gray-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-lg font-semibold">MedDesk</h1>
+        </div>
         <button onClick={() => { supabase.auth.signOut(); router.push('/login') }} className="text-sm text-gray-400 hover:text-white">Sign out</button>
       </div>
 
-      <div className="flex">
-        <Sidebar active="Forms" />
+      <div className="flex relative">
 
-        <main className="flex-1 p-8">
-          <div className="flex items-center justify-between mb-6">
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-20 sm:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        <div className={`fixed sm:static z-30 sm:z-auto h-full sm:h-auto transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}>
+          <Sidebar active="Forms" />
+        </div>
+
+        <main className="flex-1 p-4 sm:p-8 min-w-0">
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
               <h2 className="text-xl font-semibold">Form Builder</h2>
               <p className="text-gray-400 text-sm">Build and manage intake forms</p>
@@ -174,9 +193,9 @@ export default function FormsPage() {
 
           {/* Templates */}
           {showTemplates && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
               <p className="text-sm font-medium text-gray-300 mb-4">Choose a template</p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div onClick={() => loadTemplate('client_onboarding')}
                   className="bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl p-4 cursor-pointer transition">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-blue-950 text-blue-400 mb-2 inline-block">Client Onboarding</span>
@@ -197,9 +216,9 @@ export default function FormsPage() {
 
           {/* Form Builder */}
           {showBuilder && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
               <div className="text-sm font-medium text-gray-300 mb-4">{editingId ? 'Edit Form' : 'New Form'}</div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Form Name</label>
                   <input type="text" value={formName} onChange={e => setFormName(e.target.value)}
@@ -216,18 +235,21 @@ export default function FormsPage() {
                 </div>
               </div>
 
+              {/* Fields */}
               <div className="space-y-3 mb-4">
                 {fields.map((field, i) => (
-                  <div key={field.id} className="bg-gray-800 border border-gray-700 rounded-lg p-3 grid grid-cols-12 gap-3 items-center">
-                    <div className="col-span-1 text-gray-500 text-xs">{i + 1}</div>
-                    <div className="col-span-5">
+                  <div key={field.id} className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                    {/* Mobile: stacked layout */}
+                    <div className="flex items-center gap-2 mb-2 sm:hidden">
+                      <span className="text-gray-500 text-xs w-4">{i + 1}</span>
                       <input type="text" value={field.label} onChange={e => updateField(field.id, 'label', e.target.value)}
                         placeholder="Field label"
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none" />
+                        className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none" />
+                      <button onClick={() => removeField(field.id)} className="text-red-400 hover:text-red-300 text-xs ml-1">✕</button>
                     </div>
-                    <div className="col-span-3">
+                    <div className="flex items-center gap-2 sm:hidden">
                       <select value={field.type} onChange={e => updateField(field.id, 'type', e.target.value)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none">
+                        className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none">
                         <option value="text">Text</option>
                         <option value="email">Email</option>
                         <option value="phone">Phone</option>
@@ -236,21 +258,47 @@ export default function FormsPage() {
                         <option value="select">Dropdown</option>
                         <option value="textarea">Long Text</option>
                       </select>
+                      <label className="flex items-center gap-1 text-xs text-gray-400">
+                        <input type="checkbox" checked={field.required} onChange={e => updateField(field.id, 'required', e.target.checked)} className="accent-blue-500" />
+                        Req
+                      </label>
                     </div>
-                    <div className="col-span-2 flex items-center gap-1">
-                      <input type="checkbox" checked={field.required} onChange={e => updateField(field.id, 'required', e.target.checked)} className="accent-blue-500" />
-                      <span className="text-xs text-gray-400">Required</span>
-                    </div>
-                    <div className="col-span-1 text-right">
-                      <button onClick={() => removeField(field.id)} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+
+                    {/* Desktop: grid layout */}
+                    <div className="hidden sm:grid grid-cols-12 gap-3 items-center">
+                      <div className="col-span-1 text-gray-500 text-xs">{i + 1}</div>
+                      <div className="col-span-5">
+                        <input type="text" value={field.label} onChange={e => updateField(field.id, 'label', e.target.value)}
+                          placeholder="Field label"
+                          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none" />
+                      </div>
+                      <div className="col-span-3">
+                        <select value={field.type} onChange={e => updateField(field.id, 'type', e.target.value)}
+                          className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none">
+                          <option value="text">Text</option>
+                          <option value="email">Email</option>
+                          <option value="phone">Phone</option>
+                          <option value="number">Number</option>
+                          <option value="date">Date</option>
+                          <option value="select">Dropdown</option>
+                          <option value="textarea">Long Text</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2 flex items-center gap-1">
+                        <input type="checkbox" checked={field.required} onChange={e => updateField(field.id, 'required', e.target.checked)} className="accent-blue-500" />
+                        <span className="text-xs text-gray-400">Required</span>
+                      </div>
+                      <div className="col-span-1 text-right">
+                        <button onClick={() => removeField(field.id)} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-between">
-                <button onClick={addField} className="text-sm text-blue-400 hover:text-blue-300 transition">+ Add Field</button>
-                <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <button onClick={addField} className="text-sm text-blue-400 hover:text-blue-300 transition self-start">+ Add Field</button>
+                <div className="flex gap-3 justify-end">
                   <button onClick={() => { setShowBuilder(false); setEditingId(null) }} className="text-sm text-gray-400 hover:text-white px-4 py-2">Cancel</button>
                   <button onClick={handleSaveForm} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg">
                     {saving ? 'Saving...' : editingId ? 'Update Form' : 'Save Form'}
@@ -269,10 +317,10 @@ export default function FormsPage() {
               ) : forms.length === 0 ? (
                 <p className="text-gray-500 text-sm">No forms yet. Create your first one or use a template.</p>
               ) : forms.map(f => (
-                <div key={f.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <div key={f.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <p className="font-medium text-sm">{f.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${formTypeBadge[f.form_type] || 'bg-gray-800 text-gray-400'}`}>
                         {f.form_type?.replace('_', ' ')}
                       </span>
@@ -280,7 +328,7 @@ export default function FormsPage() {
                       <span className="text-xs text-gray-500">{new Date(f.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button onClick={() => copyLink(f.id)} className="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 rounded-lg bg-blue-950 transition">Copy Link</button>
                     <button onClick={() => handleEdit(f)} className="text-xs text-gray-300 hover:text-white px-3 py-1.5 rounded-lg bg-gray-800 transition">Edit</button>
                     <button onClick={() => handleDeleteForm(f.id)} className="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg bg-red-950 transition">Delete</button>
@@ -294,44 +342,47 @@ export default function FormsPage() {
           <div>
             <h3 className="text-sm font-medium text-gray-400 mb-3">Recent Submissions ({submissions.length})</h3>
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800 text-gray-400 text-left">
-                    <th className="px-4 py-3 font-medium">Form</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Submitted</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.length === 0 ? (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No submissions yet.</td></tr>
-                  ) : submissions.map(s => (
-                    <tr key={s.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                      <td className="px-4 py-3 font-medium">{s.forms?.name || '—'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${formTypeBadge[s.forms?.form_type] || 'bg-gray-800 text-gray-400'}`}>
-                          {s.forms?.form_type?.replace('_', ' ') || '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400">{new Date(s.submitted_at).toLocaleString()}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusBadge[s.status]}`}>{s.status}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {s.status !== 'reviewed' && (
-                          <button onClick={() => markReviewed(s.id)} className="text-xs text-green-400 hover:text-green-300 px-2 py-1 rounded hover:bg-gray-700 transition">
-                            Mark Reviewed
-                          </button>
-                        )}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-gray-800 text-gray-400 text-left">
+                      <th className="px-4 py-3 font-medium">Form</th>
+                      <th className="px-4 py-3 font-medium">Type</th>
+                      <th className="px-4 py-3 font-medium">Submitted</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {submissions.length === 0 ? (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No submissions yet.</td></tr>
+                    ) : submissions.map(s => (
+                      <tr key={s.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                        <td className="px-4 py-3 font-medium whitespace-nowrap">{s.forms?.name || '—'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`text-xs px-2 py-1 rounded-full ${formTypeBadge[s.forms?.form_type] || 'bg-gray-800 text-gray-400'}`}>
+                            {s.forms?.form_type?.replace('_', ' ') || '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{new Date(s.submitted_at).toLocaleString()}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusBadge[s.status]}`}>{s.status}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {s.status !== 'reviewed' && (
+                            <button onClick={() => markReviewed(s.id)} className="text-xs text-green-400 hover:text-green-300 px-2 py-1 rounded hover:bg-gray-700 transition">
+                              Mark Reviewed
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+
         </main>
       </div>
     </div>

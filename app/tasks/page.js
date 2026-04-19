@@ -11,10 +11,13 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '', status: 'open' })
   const [saving, setSaving] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const emptyForm = { title: '', description: '', assigned_to: '', priority: 'medium', due_date: '', status: 'open' }
 
   useEffect(() => {
     async function load() {
@@ -45,7 +48,7 @@ export default function TasksPage() {
     }
     const { data } = await supabase.from('staff_tasks').select('*').order('created_at', { ascending: false })
     setTasks(data || [])
-    setForm({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '', status: 'open' })
+    setForm(emptyForm)
     setEditingId(null)
     setShowForm(false)
     setSaving(false)
@@ -93,50 +96,73 @@ export default function TasksPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">meddesk</h1>
+
+      {/* Top nav */}
+      <div className="border-b border-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="sm:hidden text-gray-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-lg font-semibold">MedDesk</h1>
+        </div>
         <button onClick={() => { supabase.auth.signOut(); router.push('/login') }} className="text-sm text-gray-400 hover:text-white">Sign out</button>
       </div>
 
-      <div className="flex">
-        <Sidebar active="Tasks" />
+      <div className="flex relative">
 
-        <main className="flex-1 p-8">
-          <div className="flex items-center justify-between mb-6">
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-20 sm:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        <div className={`fixed sm:static z-30 sm:z-auto h-full sm:h-auto transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}>
+          <Sidebar active="Tasks" />
+        </div>
+
+        <main className="flex-1 p-4 sm:p-8 min-w-0">
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
               <h2 className="text-xl font-semibold">Tasks</h2>
               <p className="text-gray-400 text-sm">{open} open · {inProgress} in progress · {completed} completed</p>
             </div>
-            <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '', status: 'open' }) }}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition">
+            <button
+              onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(emptyForm) }}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition self-start sm:self-auto">
               + Add Task
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          {/* Status Cards */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">Open</p>
-              <p className="text-2xl font-semibold text-blue-400">{open}</p>
+              <p className="text-xl sm:text-2xl font-semibold text-blue-400">{open}</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">In Progress</p>
-              <p className="text-2xl font-semibold text-purple-400">{inProgress}</p>
+              <p className="text-xl sm:text-2xl font-semibold text-purple-400">{inProgress}</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">Completed</p>
-              <p className="text-2xl font-semibold text-green-400">{completed}</p>
+              <p className="text-xl sm:text-2xl font-semibold text-green-400">{completed}</p>
             </div>
           </div>
 
+          {/* Form */}
           {showForm && (
-            <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6 grid grid-cols-2 gap-4">
-              <div className="col-span-2 text-sm font-medium text-gray-300 mb-1">{editingId ? 'Edit Task' : 'New Task'}</div>
-              <div className="col-span-2">
+            <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-1 sm:col-span-2 text-sm font-medium text-gray-300 mb-1">
+                {editingId ? 'Edit Task' : 'New Task'}
+              </div>
+              <div className="col-span-1 sm:col-span-2">
                 <label className="text-xs text-gray-400 mb-1 block">Title</label>
                 <input type="text" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" required />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <label className="text-xs text-gray-400 mb-1 block">Description</label>
                 <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
@@ -173,7 +199,7 @@ export default function TasksPage() {
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
-              <div className="col-span-2 flex gap-3 justify-end">
+              <div className="col-span-1 sm:col-span-2 flex gap-3 justify-end">
                 <button type="button" onClick={() => { setShowForm(false); setEditingId(null) }} className="text-sm text-gray-400 hover:text-white px-4 py-2">Cancel</button>
                 <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg">
                   {saving ? 'Saving...' : editingId ? 'Update Task' : 'Save Task'}
@@ -182,53 +208,57 @@ export default function TasksPage() {
             </form>
           )}
 
+          {/* Table */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-800 text-gray-400 text-left">
-                  <th className="px-4 py-3 font-medium">Task</th>
-                  <th className="px-4 py-3 font-medium">Assigned To</th>
-                  <th className="px-4 py-3 font-medium">Priority</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Due Date</th>
-                  <th className="px-4 py-3 font-medium">Created</th>
-                  <th className="px-4 py-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
-                ) : tasks.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No tasks yet. Add your first one.</td></tr>
-                ) : tasks.map(t => (
-                  <tr key={t.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                    <td className="px-4 py-3">
-                      <p className={`font-medium ${t.status === 'completed' ? 'line-through text-gray-500' : ''}`}>{t.title}</p>
-                      {t.description && <p className="text-xs text-gray-500 mt-0.5">{t.description}</p>}
-                    </td>
-                    <td className="px-4 py-3 text-gray-400">{getUserName(t.assigned_to)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${priorityBadge[t.priority]}`}>{t.priority}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusBadge[t.status]}`}>{t.status.replace('_', ' ')}</span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-400">{t.due_date || '—'}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex gap-2 justify-end">
-                        <button onClick={() => toggleStatus(t)} className="text-xs text-green-400 hover:text-green-300 px-2 py-1 rounded hover:bg-gray-700 transition">
-                          {t.status === 'completed' ? 'Reopen' : 'Complete'}
-                        </button>
-                        <button onClick={() => handleEdit(t)} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded hover:bg-gray-700 transition">Edit</button>
-                        <button onClick={() => handleDelete(t.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-gray-700 transition">Delete</button>
-                      </div>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead>
+                  <tr className="border-b border-gray-800 text-gray-400 text-left">
+                    <th className="px-4 py-3 font-medium">Task</th>
+                    <th className="px-4 py-3 font-medium">Assigned To</th>
+                    <th className="px-4 py-3 font-medium">Priority</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Due Date</th>
+                    <th className="px-4 py-3 font-medium">Created</th>
+                    <th className="px-4 py-3 font-medium"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+                  ) : tasks.length === 0 ? (
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No tasks yet. Add your first one.</td></tr>
+                  ) : tasks.map(t => (
+                    <tr key={t.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                      <td className="px-4 py-3 max-w-[180px]">
+                        <p className={`font-medium truncate ${t.status === 'completed' ? 'line-through text-gray-500' : ''}`}>{t.title}</p>
+                        {t.description && <p className="text-xs text-gray-500 mt-0.5 truncate">{t.description}</p>}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{getUserName(t.assigned_to)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${priorityBadge[t.priority]}`}>{t.priority}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusBadge[t.status]}`}>{t.status.replace('_', ' ')}</span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{t.due_date || '—'}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{new Date(t.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="flex gap-1 justify-end">
+                          <button onClick={() => toggleStatus(t)} className="text-xs text-green-400 hover:text-green-300 px-2 py-1 rounded hover:bg-gray-700 transition">
+                            {t.status === 'completed' ? 'Reopen' : 'Done'}
+                          </button>
+                          <button onClick={() => handleEdit(t)} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded hover:bg-gray-700 transition">Edit</button>
+                          <button onClick={() => handleDelete(t.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-gray-700 transition">Del</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+
         </main>
       </div>
     </div>

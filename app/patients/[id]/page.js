@@ -12,6 +12,7 @@ export default function PatientProfile({ params }) {
   const [tasks, setTasks] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -52,43 +53,59 @@ export default function PatientProfile({ params }) {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">MedDesk</h1>
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="text-sm text-gray-400 hover:text-white">Sign out</button>
+
+      {/* Top nav */}
+      <div className="border-b border-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="sm:hidden text-gray-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-lg font-semibold">MedDesk</h1>
+        </div>
+        <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="text-sm text-gray-400 hover:text-white">
+          Sign out
+        </button>
       </div>
 
-      <div className="flex">
-        <Sidebar active="Patients" />
+      <div className="flex relative">
 
-        <main className="flex-1 p-8">
-          {/* Back button */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-20 sm:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        <div className={`fixed sm:static z-30 sm:z-auto h-full sm:h-auto transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}>
+          <Sidebar active="Patients" />
+        </div>
+
+        <main className="flex-1 p-4 sm:p-8 min-w-0">
+
           <button onClick={() => router.push('/patients')} className="text-sm text-gray-400 hover:text-white mb-6 flex items-center gap-1">
             ← Back to Patients
           </button>
 
           {/* Patient Header */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
-            <div className="flex items-start justify-between">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center text-xl font-bold">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-600 flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
                   {patient.full_name?.charAt(0)}
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">{patient.full_name}</h2>
-                  <p className="text-gray-400 text-sm mt-0.5">{patient.email} · {patient.phone}</p>
+                  <h2 className="text-lg sm:text-xl font-semibold">{patient.full_name}</h2>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-0.5 break-all sm:break-normal">{patient.email} · {patient.phone}</p>
                   <span className={`text-xs font-medium capitalize mt-1 inline-block ${statusColor[patient.membership_status]}`}>
                     ● {patient.membership_status}
                   </span>
                 </div>
               </div>
-              <button onClick={() => router.push(`/patients?edit=${patient.id}`)}
-                className="text-sm bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg transition">
+              <button onClick={() => router.push(`/patients?edit=${patient.id}`)} className="text-sm bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg transition self-start">
                 Edit Patient
               </button>
             </div>
 
-            {/* Details Grid */}
-            <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-800">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-800">
               {[
                 ['Date of Birth', patient.dob || '—'],
                 ['Gender', patient.gender || '—'],
@@ -110,25 +127,24 @@ export default function PatientProfile({ params }) {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Linked Tasks */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          {/* Tasks + Audit */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
               <h3 className="text-sm font-medium text-gray-300 mb-4">Linked Tasks ({tasks.length})</h3>
               {tasks.length === 0 ? (
                 <p className="text-gray-600 text-sm">No tasks linked to this patient.</p>
               ) : tasks.map(t => (
-                <div key={t.id} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium">{t.title}</p>
+                <div key={t.id} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0 gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{t.title}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{t.due_date || 'No due date'}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${priorityBadge[t.priority]}`}>{t.priority}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${priorityBadge[t.priority]}`}>{t.priority}</span>
                 </div>
               ))}
             </div>
 
-            {/* Audit Log */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
               <h3 className="text-sm font-medium text-gray-300 mb-4">Access History</h3>
               {auditLogs.length === 0 ? (
                 <p className="text-gray-600 text-sm">No audit history for this patient.</p>
@@ -142,6 +158,7 @@ export default function PatientProfile({ params }) {
               ))}
             </div>
           </div>
+
         </main>
       </div>
     </div>

@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../utils/supabase'
 
 export default function Sidebar({ active }) {
   const router = useRouter()
   const supabase = createClient()
+  const [open, setOpen] = useState(false)
 
   const workspaceLinks = [
     { label: 'Overview', href: '/dashboard', icon: '⊞' },
@@ -13,7 +15,6 @@ export default function Sidebar({ active }) {
     { label: 'Financials', href: '/financials', icon: '💰' },
     { label: 'Tasks', href: '/tasks', icon: '✓' },
     { label: 'Audit Log', href: '/audit', icon: '🔒' },
-    { label: 'Settings', href: '/settings', icon: '⚙️' },
   ]
 
   const formsLinks = [
@@ -23,11 +24,11 @@ export default function Sidebar({ active }) {
 
   const bottomLinks = [
     { label: 'KPIs', href: '/kpis', icon: '📊' },
+    { label: 'Settings', href: '/settings', icon: '⚙️' },
   ]
 
-  return (
-    <aside className="w-56 border-r border-gray-800 min-h-screen flex flex-col flex-shrink-0 bg-gray-950">
-
+  const NavContent = () => (
+    <>
       <div className="px-4 py-3 border-b border-gray-800">
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition">
           <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">M</div>
@@ -40,14 +41,13 @@ export default function Sidebar({ active }) {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
-
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">Workspace</p>
           <div className="space-y-0.5">
             {workspaceLinks.map(({ label, href, icon }) => {
               const isActive = label === active || (label === 'Overview' && active === 'Dashboard')
               return (
-                <div key={label} onClick={() => router.push(href)}
+                <div key={label} onClick={() => { router.push(href); setOpen(false) }}
                   className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm cursor-pointer transition ${isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
                   <span className="text-base w-4 text-center">{icon}</span>
                   <span>{label}</span>
@@ -63,7 +63,7 @@ export default function Sidebar({ active }) {
             {formsLinks.map(({ label, href, icon }) => {
               const isActive = label === active
               return (
-                <div key={label} onClick={() => router.push(href)}
+                <div key={label} onClick={() => { router.push(href); setOpen(false) }}
                   className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm cursor-pointer transition ${isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
                   <span className="text-base w-4 text-center">{icon}</span>
                   <span>{label}</span>
@@ -79,7 +79,7 @@ export default function Sidebar({ active }) {
             {bottomLinks.map(({ label, href, icon }) => {
               const isActive = label === active
               return (
-                <div key={label} onClick={() => router.push(href)}
+                <div key={label} onClick={() => { router.push(href); setOpen(false) }}
                   className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm cursor-pointer transition ${isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
                   <span className="text-base w-4 text-center">{icon}</span>
                   <span>{label}</span>
@@ -88,7 +88,6 @@ export default function Sidebar({ active }) {
             })}
           </div>
         </div>
-
       </nav>
 
       <div className="px-4 py-3 border-t border-gray-800">
@@ -97,7 +96,32 @@ export default function Sidebar({ active }) {
           <span className="text-xs text-green-400 font-medium">HIPAA Active</span>
         </div>
       </div>
+    </>
+  )
 
-    </aside>
+  return (
+    <>
+      {/* Mobile toggle button */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-gray-800 text-white p-2 rounded-lg">
+        {open ? '✕' : '☰'}
+      </button>
+
+      {/* Mobile overlay */}
+      {open && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setOpen(false)} />
+      )}
+
+      {/* Mobile sidebar */}
+      <aside className={`md:hidden fixed top-0 left-0 z-40 h-full w-56 bg-gray-950 border-r border-gray-800 flex flex-col transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+        <NavContent />
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-56 border-r border-gray-800 min-h-screen flex-col flex-shrink-0 bg-gray-950">
+        <NavContent />
+      </aside>
+    </>
   )
 }
